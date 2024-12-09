@@ -1,14 +1,3 @@
-#include <cctype>
-#include <cmath>
-#include <iostream>
-#include <sstream>
-#include <stack>
-#include <string>
-#include <map>
-#include <vector>
-
-using namespace std;
-
 // https://csvparser.github.io/mathparser.html
 // https://www.geeksforgeeks.org/how-to-parse-mathematical-expressions-in-cpp/
 // https://www.onlinegdb.com/online_c++_compiler
@@ -40,6 +29,42 @@ using namespace std;
 // https://www.javaguides.net/2023/08/cpp-program-to-evaluate-a-postfix-expression.html
 // https://gist.github.com/subhamagrawal7/d7d3846f955dda9d5cb5e8a568e4d5a9
 // https://www.boardinfinity.com/blog/postfix-expression/
+
+#include <cctype>
+#include <cmath>
+#include <iostream>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+void normalize_negative_values(const string& str, string& str_norm)
+{
+    str_norm = str;
+    str_norm.erase(
+        remove_if(str_norm.begin(), str_norm.end(), [](const char& element)
+        {
+            return isspace(element);
+        }),
+        str_norm.end());
+    string::size_type n = str_norm.length();
+    for (string::size_type i = 0; i < n; ++i) {
+        if (str_norm[i] == '-') {
+            if (i == 0 || str_norm[i - 1] == '(') {
+                str_norm.insert(i, "0");
+                ++i;
+                n = str_norm.length();
+                continue;
+            }
+        }
+    }
+
+    return;
+}
 
 void add_delimeter(const string& str,
     const string& special_symbols,
@@ -168,8 +193,10 @@ double calculate(const string& str)
     const string operators = "*/+-()";
     string str_in_upd = "";
     char delimeter = ' ';
+    string str_normalized_negative_values = "";
 
-    add_delimeter(str_in, operators, delimeter, str_in_upd);
+    normalize_negative_values(str_in, str_normalized_negative_values);
+    add_delimeter(str_normalized_negative_values, operators, delimeter, str_in_upd);
     split(str_in_upd, delimeter, v_infix_tokens);
     get_postfix(v_infix_tokens, v_postfix);
     calculate_postfix(v_postfix, calculated);
@@ -179,7 +206,7 @@ double calculate(const string& str)
 
 int main()
 {
-    string expression = "10 +2 *( 4 - 6)";
+    string expression = "-10 +2 *( -4 - 6)";
 
     double result = calculate(expression);
     cout << "Formula: " << expression << endl;
